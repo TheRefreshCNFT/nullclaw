@@ -960,6 +960,20 @@ fn inboundDispatcherThread(
 
         const conversation_context = buildInboundConversationContext(&msg, parsed_meta.fields);
 
+        // Build conversation context for channels that provide sender metadata.
+        // Discord passes sender info via metadata JSON; Signal/Telegram do it in channel_loop.
+        const conversation_context: ?ConversationContext = if (std.mem.eql(u8, msg.channel, "discord"))
+            .{
+                .channel = "discord",
+                .sender_id = msg.sender_id,
+                .sender_username = parsed_meta.fields.sender_username,
+                .sender_display_name = parsed_meta.fields.sender_display_name,
+                .group_id = parsed_meta.fields.guild_id,
+                .is_group = if (parsed_meta.fields.is_dm) |dm| !dm else null,
+            }
+        else
+            null;
+
         const reply = runtime.session_mgr.processMessageStreaming(
             session_key,
             msg.content,
@@ -987,6 +1001,12 @@ fn inboundDispatcherThread(
             continue;
         };
         defer allocator.free(reply);
+
+        if (reply.len == 0) {
+            log.warn("inbound dispatch: LLM returned empty reply for session={s} channel={s}", .{ session_key, msg.channel });
+        } else {
+            log.info("inbound dispatch: reply len={d} channel={s} session={s}", .{ reply.len, msg.channel, session_key });
+        }
 
         const out = makeAssistantReplyOutbound(
             allocator,

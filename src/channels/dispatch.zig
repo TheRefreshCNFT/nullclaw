@@ -5,6 +5,7 @@ const bus = @import("../bus.zig");
 const outbound = @import("../outbound.zig");
 const Atomic = @import("../portable_atomic.zig").Atomic;
 const thread_stacks = @import("../thread_stacks.zig");
+const log = std.log.scoped(.dispatch);
 
 /// Message dispatch — routes incoming ChannelMessages to the agent,
 /// routes agent responses back to the originating channel.
@@ -198,7 +199,8 @@ pub fn runOutboundDispatcher(
             registry.findByName(msg.channel);
 
         if (channel_opt) |channel| {
-            dispatchOutboundMessage(allocator, channel, msg, &draft_messages) catch {
+            dispatchOutboundMessage(allocator, channel, msg, &draft_messages) catch |err| {
+                log.warn("outbound send failed: channel={s} chat={s} err={}", .{ msg.channel, msg.chat_id, err });
                 _ = stats.errors.fetchAdd(1, .monotonic);
                 continue;
             };
