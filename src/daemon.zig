@@ -961,34 +961,6 @@ fn inboundDispatcherThread(
 
         const conversation_context = buildInboundConversationContext(&msg, parsed_meta.fields);
 
-        // Build conversation context for channels that provide sender metadata.
-        // Discord passes sender info via metadata JSON; Signal/Telegram do it in channel_loop.
-        const conversation_context: ?ConversationContext = if (std.mem.eql(u8, msg.channel, "discord"))
-            .{
-                .channel = "discord",
-                .sender_id = msg.sender_id,
-                .sender_username = parsed_meta.fields.sender_username,
-                .sender_display_name = parsed_meta.fields.sender_display_name,
-                .group_id = parsed_meta.fields.guild_id,
-                .is_group = if (parsed_meta.fields.is_dm) |dm| !dm else null,
-            }
-        else
-            null;
-
-        // Build conversation context for channels that provide sender metadata.
-        // Discord passes sender info via metadata JSON; Signal/Telegram do it in channel_loop.
-        const conversation_context: ?ConversationContext = if (std.mem.eql(u8, msg.channel, "discord"))
-            .{
-                .channel = "discord",
-                .sender_id = msg.sender_id,
-                .sender_username = parsed_meta.fields.sender_username,
-                .sender_display_name = parsed_meta.fields.sender_display_name,
-                .group_id = parsed_meta.fields.guild_id,
-                .is_group = if (parsed_meta.fields.is_dm) |dm| !dm else null,
-            }
-        else
-            null;
-
         // Wire discord_action tool context for this turn.
         if (std.mem.eql(u8, msg.channel, "discord")) {
             const discord_token: ?[]const u8 = blk: {
