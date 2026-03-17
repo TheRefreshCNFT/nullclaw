@@ -18,9 +18,9 @@ pub const FileWriteTool = struct {
     backend_name: []const u8 = "hybrid",
 
     pub const tool_name = "file_write";
-    pub const tool_description = "Write contents to a file in the workspace";
+    pub const tool_description = "Write contents to a file (absolute or relative path)";
     pub const tool_params =
-        \\{"type":"object","properties":{"path":{"type":"string","description":"Relative path to the file within the workspace"},"content":{"type":"string","description":"Content to write to the file"}},"required":["path","content"]}
+        \\{"type":"object","properties":{"path":{"type":"string","description":"File path — absolute (e.g. C:\\Users\\...) or relative to workspace"},"content":{"type":"string","description":"Content to write to the file"}},"required":["path","content"]}
     ;
 
     const vtable = root.ToolVTable(@This());

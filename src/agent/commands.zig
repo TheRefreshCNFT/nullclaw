@@ -337,8 +337,8 @@ fn invalidateSystemPromptCache(self: anytype) void {
     if (@hasField(@TypeOf(self.*), "has_system_prompt")) {
         self.has_system_prompt = false;
     }
-    if (@hasField(@TypeOf(self.*), "system_prompt_has_conversation_context")) {
-        self.system_prompt_has_conversation_context = false;
+    if (@hasField(@TypeOf(self.*), "conversation_context_fingerprint")) {
+        self.conversation_context_fingerprint = 0;
     }
     if (@hasField(@TypeOf(self.*), "workspace_prompt_fingerprint")) {
         self.workspace_prompt_fingerprint = null;

@@ -236,6 +236,7 @@ pub const DiscordChannel = struct {
         return std.mem.eql(u8, author_id, bot_user_id);
     }
 
+
     /// Replace all occurrences of `pattern` with `@` + `name` inside `buf`.
     /// Builds a new buffer and swaps contents. Handles emoji/multi-byte UTF-8.
     fn resolveMentionInBuf(buf: *std.ArrayListUnmanaged(u8), alloc: std.mem.Allocator, pattern: []const u8, name: []const u8) void {

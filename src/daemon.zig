@@ -30,6 +30,7 @@ const buildConversationContext = @import("agent/prompt.zig").buildConversationCo
 const thread_stacks = @import("thread_stacks.zig");
 const tunnel_mod = @import("tunnel.zig");
 const Atomic = @import("portable_atomic.zig").Atomic;
+const tools_mod = @import("tools/root.zig");
 
 const log = std.log.scoped(.daemon);
 
@@ -973,6 +974,45 @@ fn inboundDispatcherThread(
             }
         else
             null;
+
+        // Build conversation context for channels that provide sender metadata.
+        // Discord passes sender info via metadata JSON; Signal/Telegram do it in channel_loop.
+        const conversation_context: ?ConversationContext = if (std.mem.eql(u8, msg.channel, "discord"))
+            .{
+                .channel = "discord",
+                .sender_id = msg.sender_id,
+                .sender_username = parsed_meta.fields.sender_username,
+                .sender_display_name = parsed_meta.fields.sender_display_name,
+                .group_id = parsed_meta.fields.guild_id,
+                .is_group = if (parsed_meta.fields.is_dm) |dm| !dm else null,
+            }
+        else
+            null;
+
+        // Wire discord_action tool context for this turn.
+        if (std.mem.eql(u8, msg.channel, "discord")) {
+            const discord_token: ?[]const u8 = blk: {
+                const aid = outbound_account_id orelse "default";
+                for (runtime.config.channels.discord) |dc| {
+                    if (std.mem.eql(u8, dc.account_id, aid)) break :blk dc.token;
+                }
+                // Fallback: use first configured Discord token
+                if (runtime.config.channels.discord.len > 0) break :blk runtime.config.channels.discord[0].token;
+                break :blk null;
+            };
+            for (runtime.tools) |t| {
+                if (std.mem.eql(u8, t.name(), "discord_action")) {
+                    const dat: *tools_mod.discord_action.DiscordActionTool = @ptrCast(@alignCast(t.ptr));
+                    dat.setContext(
+                        discord_token,
+                        msg.chat_id,
+                        parsed_meta.fields.message_id,
+                        parsed_meta.fields.guild_id,
+                    );
+                    break;
+                }
+            }
+        }
 
         const reply = runtime.session_mgr.processMessageStreaming(
             session_key,

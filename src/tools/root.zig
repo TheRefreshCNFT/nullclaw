@@ -107,6 +107,7 @@ pub const web_search = @import("web_search.zig");
 pub const web_fetch = @import("web_fetch.zig");
 pub const file_append = @import("file_append.zig");
 pub const spawn = @import("spawn.zig");
+pub const discord_action = @import("discord_action.zig");
 pub const i2c = @import("i2c.zig");
 pub const spi = @import("spi.zig");
 pub const path_security = @import("path_security.zig");
@@ -434,6 +435,11 @@ pub fn allTools(
     const sp = try allocator.create(spawn.SpawnTool);
     sp.* = .{ .manager = opts.subagent_manager };
     try list.append(allocator, sp.tool());
+
+    // Discord action tool (react, pin, threads, moderation)
+    const dat = try allocator.create(discord_action.DiscordActionTool);
+    dat.* = .{};
+    try list.append(allocator, dat.tool());
 
     if (opts.http_enabled) {
         // Pushover notification tool (network egress, gated with HTTP tools).

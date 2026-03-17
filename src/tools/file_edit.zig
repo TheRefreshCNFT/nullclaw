@@ -21,9 +21,9 @@ pub const FileEditTool = struct {
     backend_name: []const u8 = "hybrid",
 
     pub const tool_name = "file_edit";
-    pub const tool_description = "Find and replace text in a file";
+    pub const tool_description = "Find and replace text in a file (absolute or relative path)";
     pub const tool_params =
-        \\{"type":"object","properties":{"path":{"type":"string","description":"Relative path to the file within the workspace"},"old_text":{"type":"string","description":"Text to find in the file"},"new_text":{"type":"string","description":"Replacement text"}},"required":["path","old_text","new_text"]}
+        \\{"type":"object","properties":{"path":{"type":"string","description":"File path — absolute (e.g. C:\\Users\\...) or relative to workspace"},"old_text":{"type":"string","description":"Text to find in the file"},"new_text":{"type":"string","description":"Replacement text"}},"required":["path","old_text","new_text"]}
     ;
 
     const vtable = root.ToolVTable(@This());

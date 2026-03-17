@@ -108,9 +108,9 @@ pub const FileReadTool = struct {
     backend_name: []const u8 = "hybrid",
 
     pub const tool_name = "file_read";
-    pub const tool_description = "Read the contents of a file in the workspace";
+    pub const tool_description = "Read the contents of a file (absolute or relative path)";
     pub const tool_params =
-        \\{"type":"object","properties":{"path":{"type":"string","description":"Relative path to the file within the workspace"}},"required":["path"]}
+        \\{"type":"object","properties":{"path":{"type":"string","description":"File path — absolute (e.g. C:\\Users\\...) or relative to workspace"}},"required":["path"]}
     ;
 
     const vtable = root.ToolVTable(@This());

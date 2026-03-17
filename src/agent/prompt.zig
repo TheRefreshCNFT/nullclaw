@@ -345,6 +345,16 @@ pub fn buildSystemPrompt(
         if (cc.sender_display_name) |dname| {
             try std.fmt.format(w, "- Sender display name: {s}\n", .{dname});
         }
+        // Discord sender fields
+        if (cc.sender_id) |sid| {
+            try std.fmt.format(w, "- Sender Discord ID: {s}\n", .{sid});
+        }
+        if (cc.sender_username) |uname| {
+            try std.fmt.format(w, "- Sender username: {s}\n", .{uname});
+        }
+        if (cc.sender_display_name) |dname| {
+            try std.fmt.format(w, "- Sender display name: {s}\n", .{dname});
+        }
         try w.writeAll("\n");
     }
 

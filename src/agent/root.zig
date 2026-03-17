@@ -352,10 +352,10 @@ pub const Agent = struct {
 
     /// Whether the system prompt has been injected.
     has_system_prompt: bool = false,
-    /// Whether the currently injected system prompt contains conversation context.
-    system_prompt_has_conversation_context: bool = false,
-    /// Fingerprint of the conversation context used for the cached system prompt.
-    system_prompt_conversation_context_fingerprint: ?u64 = null,
+    /// Fingerprint of the conversation context baked into the current system prompt.
+    /// When the sender changes (different user in group chat), the fingerprint
+    /// changes and triggers a system prompt rebuild so the LLM sees the new sender.
+    conversation_context_fingerprint: u64 = 0,
     /// Fingerprint of workspace prompt files for the currently injected system prompt.
     workspace_prompt_fingerprint: ?u64 = null,
     /// Model name used when building the currently cached system prompt.
@@ -1653,14 +1653,9 @@ pub const Agent = struct {
             }
         }
 
-        const turn_has_conversation_context = self.conversation_context != null;
-        const turn_conversation_context_fingerprint = if (self.conversation_context) |ctx|
-            ctx.senderFingerprint()
-        else
-            null;
+        const turn_context_fingerprint: u64 = if (self.conversation_context) |cc| cc.senderFingerprint() else 0;
         const conversation_context_changed = self.has_system_prompt and
-            (self.system_prompt_has_conversation_context != turn_has_conversation_context or
-                self.system_prompt_conversation_context_fingerprint != turn_conversation_context_fingerprint);
+            self.conversation_context_fingerprint != turn_context_fingerprint;
 
         if (!self.has_system_prompt or conversation_context_changed) {
             const capabilities_section = capabilities_mod.buildPromptSection(
@@ -1716,8 +1711,7 @@ pub const Agent = struct {
                 });
             }
             self.has_system_prompt = true;
-            self.system_prompt_has_conversation_context = turn_has_conversation_context;
-            self.system_prompt_conversation_context_fingerprint = turn_conversation_context_fingerprint;
+            self.conversation_context_fingerprint = turn_context_fingerprint;
             self.workspace_prompt_fingerprint = workspace_fp;
             if (self.system_prompt_model_name) |cached_model| self.allocator.free(cached_model);
             self.system_prompt_model_name = try self.allocator.dupe(u8, turn_model_name);
@@ -3181,8 +3175,7 @@ pub const Agent = struct {
         }
         self.history.items.len = 0;
         self.has_system_prompt = false;
-        self.system_prompt_has_conversation_context = false;
-        self.system_prompt_conversation_context_fingerprint = null;
+        self.conversation_context_fingerprint = 0;
         self.workspace_prompt_fingerprint = null;
     }
 
